@@ -202,9 +202,8 @@ class _CreateCardScreenState extends State<CreateCardScreen> {
          content: const Text(''),
          actions: <Widget>[
          TextButton(
-           onPressed: () async{
-               await audioRecorder.dispose();
-               Navigator.pop(context);
+           onPressed: () {
+               audioRecorder.dispose().then((value) => Navigator.pop(context));
            },
            child: const Text('Cancel'),
     ),

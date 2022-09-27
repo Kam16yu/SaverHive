@@ -92,11 +92,6 @@ class _HomeState extends State<Home> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: <Widget>[
-                          Text(card.id.toString(),
-                              style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14.0)
-                          ),
                           Text(card.time,
                             style: const TextStyle(
                             fontWeight: FontWeight.bold,
@@ -118,7 +113,6 @@ class _HomeState extends State<Home> {
                                 cardBox.delete(card.id);
                                 setState(() {});},
                             ),
-                            const SizedBox(width: 8),
                       ],),
                     ]
                 ),
@@ -150,6 +144,7 @@ class _HomeState extends State<Home> {
             body: Row(
               children: [
                 TextButton(
+                    style: ButtonStyle(backgroundColor: MaterialStateProperty.all(Colors.black26)),
                     onPressed: () {
                       cardBox.clear().then((value){
                         Navigator.pushNamedAndRemoveUntil(
