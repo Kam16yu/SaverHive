@@ -43,13 +43,24 @@ class TakePictureScreenState extends State<TakePictureScreen> {
   Widget build(BuildContext context) {
     final dbcard = ModalRoute.of(context)!.settings.arguments as DbCard;
     return Scaffold(
-      appBar: AppBar(title: const Text('Take a picture')),
+      appBar: AppBar(title: const Text('Take a picture'),
+          actions: [IconButton(
+            icon: const Icon(Icons.flash_on),
+            onPressed: () async{
+              if (_controller.value.flashMode != FlashMode.torch){
+                await _controller.setFlashMode(FlashMode.torch);
+              } else {
+                await _controller.setFlashMode(FlashMode.off);
+              }
+          })
+        ]),
       // Waiting controller initialization before displaying the
       // camera preview. Use a FutureBuilder to display a loading spinner
       body:  FutureBuilder<void>(
       future: _initializeControllerFuture,
       builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.done) {
+            _controller.setFlashMode(FlashMode.off);
             // If the Future is complete, display the preview.
             return CameraPreview(_controller);
             } else {
@@ -60,16 +71,17 @@ class TakePictureScreenState extends State<TakePictureScreen> {
       floatingActionButton: FloatingActionButton(
             // Provide an onPressed callback.
             onPressed: () async {
-            // Take the Picture in a try / catch block. If anything goes wrong,
-            // catch the error.
+              // Take the Picture in a try / catch block. If anything goes wrong,
+              // catch the error.
               try {
-            // Ensure that the camera is initialized.
+              // Ensure that the camera is initialized.
               await _initializeControllerFuture;
               // Attempt to take a picture and get the file `image`
               // where it was saved.
               foto = await _controller.takePicture();
               if (!mounted) return;
-              dbcard.pict = await foto.readAsBytes();
+              _controller.setFlashMode(FlashMode.off);
+              dbcard.pict.add(await foto.readAsBytes());
               // If the picture was taken, display it on a new screen.
               await Navigator.of(context).push(
               MaterialPageRoute(
@@ -109,8 +121,8 @@ class DisplayPictureScreen extends StatelessWidget {
       floatingActionButton: FloatingActionButton(
         // Provide an onPressed callback.
         onPressed: ()  {
-          Navigator.pushReplacementNamed(context, '/CreateCardScreen',
-                   arguments: chcard);
+          Navigator.pushNamedAndRemoveUntil(context, '/CreateCardScreen',
+              ModalRoute.withName('/'), arguments: chcard);
         }, child: const Text("Save")),
     );
   }

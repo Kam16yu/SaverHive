@@ -19,6 +19,8 @@ Future<void> main() async {
   final firstCamera = cameras.first;
 
   runApp(MaterialApp(
+    debugShowCheckedModeBanner: false,
+    title: 'Saver',
     theme: ThemeData(primaryColor: Colors.cyan,),
     initialRoute: '/',
     routes: {

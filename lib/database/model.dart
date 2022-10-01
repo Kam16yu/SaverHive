@@ -1,16 +1,18 @@
-import 'dart:typed_data';
-
 class DbCard {
   var id = 1;
   var name = "null name";
   var text = "null text";
-  var pict = Uint8List(1);
+  var pict = [];
   var time = "null time";
-  var rec = Uint8List(1);
+  var rec = [];
+  var type = 'noteCard';
+  var idList = [];
 
-  //Constructors
+  //Constructor
   DbCard({required this.id, required this.name, required this.text,
-    required this.pict, required this.time, required this.rec});
+    required this.pict, required this.time, required this.rec,
+    required this.type, required this.idList});
+
   //Create Card from map
   static DbCard cardFromMap(map) {
     return DbCard(
@@ -19,7 +21,10 @@ class DbCard {
       text: map['text'],
       pict: map['pict'],
       time: map['time'],
-      rec: map['rec'],);
+      rec: map['rec'],
+      type: map['type'],
+      idList: map['idlist']
+    );
   }
 
   // Convert a Card into a Map. The keys must correspond to the names of the
@@ -31,7 +36,9 @@ class DbCard {
       'text': text,
       'pict': pict,
       'time': time,
-      'rec' : rec
+      'rec' : rec,
+      'type': type,
+      'idlist': idList
     };
   }
 
