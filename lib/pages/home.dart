@@ -1,9 +1,8 @@
-import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
-import 'package:hive_flutter/adapters.dart';
-
+import 'package:just_audio/just_audio.dart';
 import '../database/model.dart';
+import '../utils/audio_source.dart';
 
 class Home extends StatefulWidget {
   const Home({Key? key}) : super(key: key);
@@ -15,7 +14,7 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   final player = AudioPlayer();
   final cardBox = Hive.box("cardBox");
-  var tempId = -1;
+  var tempIndex = -1;
 
   @override
   Widget build(BuildContext context) {
@@ -66,7 +65,7 @@ class _HomeState extends State<Home> {
                             title: Text(card.name),
                             subtitle: Text(card.text),
                           ),
-                          if (card.rec.isNotEmpty) recordButtons (card),
+                          if (card.rec.isNotEmpty) playButtons (card),
                           //CARD BUTTONS
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -151,36 +150,37 @@ class _HomeState extends State<Home> {
     }
   }
 
-  recordButtons (DbCard card) {
-        return Card(
-        child: Row(children: [
-          IconButton(
-              padding: const EdgeInsets.fromLTRB(
-                  8.0, 8.0, 20.0, 8.0),
-              icon: const Icon(Icons.play_arrow),
-              onPressed: () async {
-                if (player.state.name != "paused" || card.id != tempId) {
-                  tempId = card.id;
+  playButtons(DbCard card) {
+    return Card(
+      child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [Row(children: [
+            const SizedBox(width: 10),
+            IconButton(
+                padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 5),
+                icon: const Icon(Icons.play_arrow),
+                onPressed: () async {
+                  if (player.playerState.playing != false || card.id != tempIndex
+                      || player.playerState.processingState == ProcessingState.idle ) {
+                    tempIndex = card.id;
+                    await player.setAudioSource(MyCustomSource(card.rec[0]));
+                    await player.play();
+                  } else {
+                    await player.play();
+                  }
+                }),
+            IconButton(
+                padding: const EdgeInsets.symmetric(horizontal: 3),
+                icon: const Icon(Icons.pause),
+                onPressed: () async {
+                  await player.pause();
+                }),
+            IconButton(
+                padding: const EdgeInsets.symmetric(horizontal: 3),
+                icon: const Icon(Icons.stop),
+                onPressed: () async {
                   await player.stop();
-                  await player.setSourceBytes(card.rec[0]);
-                }
-                await player.resume();
-              }),
-          IconButton(
-              padding: const EdgeInsets.fromLTRB(
-                  8.0, 8.0, 20.0, 8.0),
-              icon: const Icon(Icons.pause),
-              onPressed: () async {
-                await player.pause();
-              }),
-          IconButton(
-              padding: const EdgeInsets.fromLTRB(
-                  8.0, 8.0, 20.0, 8.0),
-              icon: const Icon(Icons.stop),
-              onPressed: () async {
-                await player.stop();
-              }),
-        ]),
-      );
+                }),
+          ],),]),
+    );
   }
 }

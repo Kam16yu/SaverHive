@@ -1,10 +1,15 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import '../database/model.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:record/record.dart';
-import 'package:audioplayers/audioplayers.dart';
+import 'package:just_audio/just_audio.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:path_provider/path_provider.dart';
+import '../utils/audio_source.dart';
 
 class CreateCardScreen extends StatefulWidget {
   const CreateCardScreen({Key? key}) : super(key: key);
@@ -14,7 +19,7 @@ class CreateCardScreen extends StatefulWidget {
 }
 
 class _CreateCardScreenState extends State<CreateCardScreen> {
-  final box = Hive.box('cardBox');
+  final cardBox = Hive.box('cardBox');
   var id = 0;
   var cardName = '';
   var cardText = '';
@@ -46,7 +51,7 @@ class _CreateCardScreenState extends State<CreateCardScreen> {
     } else if (tmpsave == 1) {
       //get max ID,then create Card object
       try {
-        id = box.keys.last + 1;
+        id = cardBox.keys.last + 1;
       } on StateError {
         id = 0;
       }
@@ -55,7 +60,7 @@ class _CreateCardScreenState extends State<CreateCardScreen> {
 
     return Scaffold(
       backgroundColor: Colors.white,
-      //AppBar, Save button
+      //APPBAR, Save button
       appBar: AppBar(
         title: const Text("Card"),
         centerTitle: true,
@@ -81,7 +86,7 @@ class _CreateCardScreenState extends State<CreateCardScreen> {
                   type: type,
                   idList: idList);
               // push Card in DB, then go to Home page
-              box.put(id, card.toMap()).then((_) =>
+              cardBox.put(id, card.toMap()).then((_) =>
                   Navigator.pushNamedAndRemoveUntil(
                       context, '/', (route) => false));
             },
@@ -90,71 +95,116 @@ class _CreateCardScreenState extends State<CreateCardScreen> {
         ],
       ),
 
-      // 2 Textfields, 1 image
-      body:  ListView(
-        shrinkWrap: true,
-        padding: const EdgeInsets.all(8), children: [
-        //CARD NAME
-        TextFormField(
-          initialValue: cardName,
-          keyboardType: TextInputType.text,
-          decoration: const InputDecoration(labelText: 'Card Name'),
-          onChanged: (val) => cardName = val,
-        ),
-        //CARD TEXT
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
-          child: TextFormField(
-            initialValue: cardText,
-            maxLines: null,
-            minLines: null,
-            decoration: const InputDecoration(
-              border: OutlineInputBorder(),
-              hintText: 'Enter text',
+      //BODY
+      // 2 Textfields, Records, Images
+      body: ListView(
+          shrinkWrap: true,
+          padding: const EdgeInsets.all(8),
+          children: [
+            //CARD NAME
+            TextFormField(
+              initialValue: cardName,
+              keyboardType: TextInputType.text,
+              decoration: const InputDecoration(labelText: 'Card Name'),
+              onChanged: (val) => cardName = val,
             ),
-            onChanged: (val) => cardText = val,
-          ),
-        ),
-        //PLAY RECORD
-        if (rec.isNotEmpty)
-          Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 2),
-              child: SizedBox(
-              height: 95,
-              child: ListView.separated(
-                separatorBuilder: (context, index) => const SizedBox(height: 1),
-                itemCount: rec.length,
-                itemBuilder: (context, index) {
-                return recordButtons(index, id, rec);
-              }))),
-        //LIST WITH PICTURES
-        if (pict.isNotEmpty)
-          Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 5),
-          child:SizedBox(
-            height: 500,
-            child: ListView.builder(
-              itemCount: pict.length,
-              itemBuilder: (context, index) {
-              return Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Image.memory(pict[index],
-                      errorBuilder: (BuildContext context, Object exception,
-                      StackTrace? stackTrace) {
-                        return const Text("");
-                      },),
-                    IconButton(
-                        icon: const Icon(Icons.delete),
-                        onPressed: () {
-                          setState(() {
-                            pict.removeAt(index);
-                          });
-                        }),
-                  ]);
-            },
-          )))
-      ]),
+            //CARD TEXT
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
+              child: TextFormField(
+                initialValue: cardText,
+                maxLines: null,
+                minLines: null,
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  hintText: 'Enter text',
+                ),
+                onChanged: (val) => cardText = val,
+              ),
+            ),
+            //PLAY RECORD
+            if (rec.isNotEmpty)
+              Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 2),
+                  child: SizedBox(
+                      height: 95,
+                      child: ListView.separated(
+                          separatorBuilder: (context, index) =>
+                              const SizedBox(height: 1),
+                          itemCount: rec.length,
+                          itemBuilder: (context, index) {
+                            return playButtons(index, id, rec);
+                          }))),
+            //LIST WITH PICTURES
+            if (pict.isNotEmpty)
+              Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 25, vertical: 5),
+                  child: SizedBox(
+                      height: 500,
+                      child: ListView.builder(
+                        itemCount: pict.length,
+                        itemBuilder: (context, index) {
+                          return Column(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    // BODY
+                                    Text((index + 1).toString()),
+                                    IconButton(
+                                        icon: const Icon(Icons.share),
+                                        onPressed: () async {
+                                          final box = this
+                                              .context
+                                              .findRenderObject() as RenderBox?;
+                                          String fileName =
+                                              "img_${DateTime.now().millisecondsSinceEpoch}.jpg";
+                                          var path = "";
+                                          if (!kIsWeb) {
+                                            await getTemporaryDirectory()
+                                                .then((dir) async {
+                                              path = "${dir.path}/$fileName";
+                                              File(path).writeAsBytesSync(
+                                                  pict[index]);
+                                            });
+                                          }
+                                          XFile xfile = XFile.fromData(
+                                              pict[index],
+                                              mimeType: 'image/jpeg',
+                                              name: fileName,
+                                              path: path);
+                                          await Share.shareXFiles([xfile],
+                                              subject: cardName,
+                                              sharePositionOrigin: box!
+                                                      .localToGlobal(
+                                                          Offset.zero) &
+                                                  box.size);
+                                        }),
+                                    IconButton(
+                                        icon: const Icon(Icons.delete),
+                                        onPressed: () {
+                                          setState(() {
+                                            pict.removeAt(index);
+                                          });
+                                        }),
+                                  ],
+                                ),
+                                Image.memory(
+                                  pict[index],
+                                  errorBuilder: (BuildContext context,
+                                      Object exception,
+                                      StackTrace? stackTrace) {
+                                    return const Text("");
+                                  },
+                                ),
+                              ]);
+                        },
+                      )))
+          ]),
 
       // BOTTOM BAR: DELETE, MIC, PICTURE, CAMERA
       bottomNavigationBar: BottomAppBar(
@@ -170,7 +220,7 @@ class _CreateCardScreenState extends State<CreateCardScreen> {
                 icon: const Icon(Icons.delete),
                 iconSize: 40.0,
                 onPressed: () {
-                  box.delete(id);
+                  cardBox.delete(id);
                   Navigator.pushNamedAndRemoveUntil(
                       context, '/', (route) => false);
                 },
@@ -193,7 +243,9 @@ class _CreateCardScreenState extends State<CreateCardScreen> {
                   image?.readAsBytes().then((value) {
                     setState(() {
                       pict.add(value);
-                    });});},
+                    });
+                  });
+                },
               ),
               //ADD Photo
               IconButton(
@@ -219,6 +271,7 @@ class _CreateCardScreenState extends State<CreateCardScreen> {
     );
   }
 
+//RECORD DIALOG
   Future micDialog() async {
     // Check and request permission
     if (await audioRecorder.hasPermission()) {
@@ -242,9 +295,16 @@ class _CreateCardScreenState extends State<CreateCardScreen> {
                   TextButton(
                     onPressed: () {
                       audioRecorder.stop().then((value) {
-                        File audioFile = File(value!);
-                        setState(() => rec.add(audioFile.readAsBytesSync()));
-                        Navigator.pop(context);
+                        if (kIsWeb) {
+                          http.readBytes(Uri.parse(value!)).then((value) {
+                            setState(() => rec.add(value));
+                            Navigator.pop(context);
+                          });
+                        } else {
+                          File audioFile = File(value!);
+                          setState(() => rec.add(audioFile.readAsBytesSync()));
+                          Navigator.pop(context);
+                        }
                       });
                     },
                     child: const Text('STOP record'),
@@ -252,37 +312,65 @@ class _CreateCardScreenState extends State<CreateCardScreen> {
                 ]));
   }
 
-  recordButtons(index, int id, rec) {
+//RECORDS BUTTONS
+  playButtons(index, int id, rec) {
     return Card(
-      child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [Row(children: [
-        const SizedBox(width: 10),
-        Text((index+1).toString()),
+      child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+        Row(
+          children: [
+            const SizedBox(width: 10),
+            Text((index + 1).toString()),
+            IconButton(
+                padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 5),
+                icon: const Icon(Icons.play_arrow),
+                onPressed: () async {
+                  if (player.playerState.playing != false ||
+                      index != tempIndex ||
+                      player.playerState.processingState ==
+                          ProcessingState.idle) {
+                    tempIndex = index;
+                    await player.setAudioSource(MyCustomSource(rec[index]));
+                    await player.play();
+                  } else {
+                    await player.play();
+                  }
+                }),
+            IconButton(
+                padding: const EdgeInsets.symmetric(horizontal: 3),
+                icon: const Icon(Icons.pause),
+                onPressed: () async {
+                  await player.pause();
+                }),
+            IconButton(
+                padding: const EdgeInsets.symmetric(horizontal: 3),
+                icon: const Icon(Icons.stop),
+                onPressed: () async {
+                  await player.stop();
+                }),
+          ],
+        ),
         IconButton(
-            padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 5),
-            icon: const Icon(Icons.play_arrow),
+            icon: const Icon(Icons.share),
             onPressed: () async {
-              if (player.state.name != "paused" || index != tempIndex) {
-                tempIndex = index;
-                await player.stop();
-                await player.setSourceBytes(rec[index]);
+              final box = context.findRenderObject() as RenderBox?;
+              String fileName =
+                  "rec_${DateTime.now().millisecondsSinceEpoch}.m4a";
+              var path = "";
+              if (!kIsWeb) {
+                await getTemporaryDirectory().then((dir) async {
+                  path = "${dir.path}/$fileName";
+                  File(path).writeAsBytesSync(rec[index]);
+                });
               }
-              await player.resume();
+              XFile xfile = XFile.fromData(rec[index],
+                  mimeType: 'audio/mp4', name: fileName, path: path);
+              await Share.shareXFiles([xfile],
+                  subject: cardName,
+                  sharePositionOrigin:
+                      box!.localToGlobal(Offset.zero) & box.size);
             }),
         IconButton(
-            padding: const EdgeInsets.symmetric(horizontal: 3),
-            icon: const Icon(Icons.pause),
-            onPressed: () async {
-              await player.pause();
-            }),
-        IconButton(
-            padding: const EdgeInsets.symmetric(horizontal: 3),
-            icon: const Icon(Icons.stop),
-            onPressed: () async {
-              await player.stop();
-            }),],),
-        IconButton(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
+            padding: const EdgeInsets.symmetric(horizontal: 10),
             icon: const Icon(Icons.delete),
             onPressed: () {
               setState(() {

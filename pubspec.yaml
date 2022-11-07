@@ -22,24 +22,27 @@ environment:
 
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
-# consider running `flutter pub upgrade --major-versions`. Alternatively,
+# consider running flutter pub upgrade --major-versions`. Alternatively,
 # dependencies can be manually updated by changing the version numbers below to
 # the latest version available on pub.dev. To see which dependencies have newer
 # versions available, run `flutter pub outdated`.
 
 dependencies:
+  http:
+  path_provider:
+  hive:
   hive_flutter:
-  hive: ^2.2.3
-  audioplayers: ^1.0.1
-  record: ^4.4.0
+  just_audio:
+  record:
   image_picker:
   camera:
   flutter:
     sdk: flutter
-
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
-  cupertino_icons: ^1.0.2
+  cupertino_icons:
+  share_plus:
+  file:
 
 dev_dependencies:
   flutter_test:

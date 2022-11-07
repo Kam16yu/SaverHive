@@ -1,9 +1,10 @@
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
-import 'package:hive_flutter/adapters.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:saver/pages/home.dart';
 import 'package:saver/pages/create_card.dart';
 import 'package:saver/pages/usecamera.dart';
+
 // App List of items, add/delete, 2 screens, SQLite.
 
 
