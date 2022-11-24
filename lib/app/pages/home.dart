@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:just_audio/just_audio.dart';
-import '../database/model.dart';
-import '../utils/audio_source.dart';
+import 'package:saver/database/model.dart';
+import 'package:saver/app/utils/audio_source.dart';
 
 class Home extends StatefulWidget {
   const Home({Key? key}) : super(key: key);
@@ -14,7 +14,7 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   final player = AudioPlayer();
   final cardBox = Hive.box("cardBox");
-  var tempIndex = -1;
+  int tempIndex = -1;
 
   @override
   Widget build(BuildContext context) {

@@ -1,30 +1,35 @@
 class DbCard {
-  var id = 1;
-  var name = "null name";
-  var text = "null text";
-  var pict = [];
-  var time = "null time";
-  var rec = [];
-  var type = 'noteCard';
-  var idList = [];
+  int id = 1;
+  String name = "null name";
+  String text = "null text";
+  List pict = [];
+  String time = "null time";
+  List rec = [];
+  String type = 'noteCard';
+  List idList = [];
 
   //Constructor
-  DbCard({required this.id, required this.name, required this.text,
-    required this.pict, required this.time, required this.rec,
-    required this.type, required this.idList});
+  DbCard(
+      {required this.id,
+      required this.name,
+      required this.text,
+      required this.pict,
+      required this.time,
+      required this.rec,
+      required this.type,
+      required this.idList});
 
   //Create Card from map
-  static DbCard cardFromMap(map) {
+  static DbCard cardFromMap(mapObject) {
     return DbCard(
-      id: map['id'],
-      name: map['name'],
-      text: map['text'],
-      pict: map['pict'],
-      time: map['time'],
-      rec: map['rec'],
-      type: map['type'],
-      idList: map['idlist']
-    );
+        id: mapObject['id'],
+        name: mapObject['name'],
+        text: mapObject['text'],
+        pict: mapObject['pict'],
+        time: mapObject['time'],
+        rec: mapObject['rec'],
+        type: mapObject['type'],
+        idList: mapObject['idList']);
   }
 
   // Convert a Card into a Map. The keys must correspond to the names of the
@@ -36,9 +41,9 @@ class DbCard {
       'text': text,
       'pict': pict,
       'time': time,
-      'rec' : rec,
+      'rec': rec,
       'type': type,
-      'idlist': idList
+      'idList': idList
     };
   }
 
@@ -49,4 +54,3 @@ class DbCard {
     return 'Card{id: $id, name: $name, text: $text, time: $time}';
   }
 }
-

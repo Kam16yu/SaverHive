@@ -1,8 +1,7 @@
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:saver/database/model.dart';
 
-
-import '../database/model.dart';
 late XFile foto;
 
 // A screen that allows users to take a picture using a given camera.
@@ -89,7 +88,7 @@ class TakePictureScreenState extends State<TakePictureScreen> {
                 builder: (context) => DisplayPictureScreen(
                   // Pass the automatically generated path to
                   // the DisplayPictureScreen widget.
-                  chcard: dbcard,
+                  tempCard: dbcard,
                 ),
               ),);
               } catch (e) {
@@ -104,8 +103,8 @@ class TakePictureScreenState extends State<TakePictureScreen> {
 
 // A widget that displays the picture taken by the user.
 class DisplayPictureScreen extends StatelessWidget {
-  final DbCard chcard;
-  const DisplayPictureScreen({super.key, required this.chcard });
+  final DbCard tempCard;
+  const DisplayPictureScreen({super.key, required this.tempCard });
 
   @override
   Widget build(BuildContext context) {
@@ -113,7 +112,7 @@ class DisplayPictureScreen extends StatelessWidget {
       appBar: AppBar(title: const Text('Display the Picture')),
       // The image is stored as a file on the device. Use the `Image.file`
       // constructor with the given path to display the image.
-      body: Image.memory(chcard.pict.last,
+      body: Image.memory(tempCard.pict.last,
         errorBuilder: (BuildContext context, Object exception,
             StackTrace? stackTrace) {
           return const Text("");
@@ -122,7 +121,7 @@ class DisplayPictureScreen extends StatelessWidget {
         // Provide an onPressed callback.
         onPressed: ()  {
           Navigator.pushNamedAndRemoveUntil(context, '/CreateCardScreen',
-              ModalRoute.withName('/'), arguments: chcard);
+              ModalRoute.withName('/'), arguments: tempCard);
         }, child: const Text("Save")),
     );
   }

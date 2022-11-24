@@ -3,13 +3,13 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
-import '../database/model.dart';
+import 'package:saver/database/model.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:record/record.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:path_provider/path_provider.dart';
-import '../utils/audio_source.dart';
+import 'package:saver/app/utils/audio_source.dart';
 
 class CreateCardScreen extends StatefulWidget {
   const CreateCardScreen({Key? key}) : super(key: key);
@@ -20,13 +20,13 @@ class CreateCardScreen extends StatefulWidget {
 
 class _CreateCardScreenState extends State<CreateCardScreen> {
   final cardBox = Hive.box('cardBox');
-  var id = 0;
-  var cardName = '';
-  var cardText = '';
-  var pict = [];
-  var rec = [];
-  var type = 'noteCard';
-  var idList = [];
+  int id = 0;
+  String cardName = '';
+  String cardText = '';
+  List pict = [];
+  List rec = [];
+  String type = 'noteCard';
+  List idList = [];
 
   var tmpsave = 1; // check card data import
   var tempIndex = -1; //for check playing rec index
